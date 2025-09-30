@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Lotusblüte geöffnet">
+  <rect width="400" height="400" fill="white"/>
+  <g transform="translate(200,220)" fill="#4c1d95">
+    <path d="M0-150 C-40,-100 -30,-40 0,0 C30,-40 40,-100 0,-150 Z"/>
+    <path d="M-100,-40 C-120,-80 -80,-120 -60,-80 C-50,-60 -60,-40 -100,-40 Z"/>
+    <path d="M100,-40 C120,-80 80,-120 60,-80 C50,-60 60,-40 100,-40 Z"/>
+    <path d="M-70,0 C-110,10 -130,40 -90,30 C-50,20 -40,10 -70,0 Z"/>
+    <path d="M70,0 C110,10 130,40 90,30 C50,20 40,10 70,0 Z"/>
+  </g>
+  <text x="200" y="350" text-anchor="middle" font-family="Georgia, serif" font-size="56" fill="#0f172a">π<tspan dy="-18" font-size="28">2</tspan></text>
+</svg>

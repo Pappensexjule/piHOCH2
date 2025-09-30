@@ -1,31 +1,24 @@
-# piHOCH2 · Live-Dashboard (Next.js + Tailwind + Recharts)
+# piHOCH2 — LIVE Starter (#fuckyouhoch2)
 
-## Schnellstart
-```bash
-# 1) Projekt holen
-npm install
+Minimal, DE‑rechtlich vorsichtig, Vercel‑ready.
 
-# 2) Entwicklung
-npm run dev
+## Deploy (Vercel)
+1) Neues Projekt in Vercel anlegen → ZIP importieren.
+2) Framework: Next.js (App Router).
+3) Build: `npm run build` → Output `.next`.
+4) Optional ENV (später): `STRIPE_PUBLIC_KEY`, `STRIPE_SECRET_KEY` — **keine realen Keys ins Repo!**
 
-# 3) Produktion
-npm run build && npm start
-```
+## Struktur
+- `/app` — Seiten (Manifest, Produkte, Therapeut, Recht)
+- `/public/branding` — Logos (SVG: #fuckyouhoch2, Lotus)
+- `/public/images` — Portrait/Medien (bereitgestellt)
+- `/components`, `/styles` — für Erweiterungen
 
-## Stack
-- Next.js (App Router)
-- Tailwind CSS (Dark/Black Theme)
-- Recharts (Wellen & Ticker)
-- lucide-react (Icons)
+## Recht
+- Impressum/Datenschutz = Vorlagen. Bitte Firmierung/Adresse ergänzen & prüfen lassen.
+- Foto/„Lars Kreuznacht“ = Avatar auf Basis bereitgestellter Medien (keine realen Personen).
 
-## Dateien
-- `app/layout.tsx` — globales Layout + Dark Theme
-- `app/page.tsx` — Einstieg, rendert das Dashboard
-- `components/Dashboard.tsx` — Dashboard-Komponente
-- `styles/globals.css` — Tailwind
-- `tailwind.config.js`, `postcss.config.js`, `next.config.mjs`, `tsconfig.json`
-
-## Hinweise
-- Zahlen sind aktuell Dummy-Daten (Balance=€2). Anbindung an echte Quellen erfolgt per API/CSV-Import.
-- Für Stripe/PayPal Buttons später API-Keys/Links hinterlegen.
-- Für Vercel-Deploy: Repo pushen → Vercel importieren → build starten.
+## To‑Do nach Live
+- Produkte anlegen + Stripe Checkout anbinden.
+- CI verfeinern (Farben/Typo).
+- Inhalte (Transkripte/Story/Profil) einpflegen.

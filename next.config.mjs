@@ -1,6 +1,3 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  experimental: { appDir: true }
-}
-export default nextConfig
+const nextConfig = { reactStrictMode: true, images: { unoptimized: true } };
+export default nextConfig;
