@@ -1,0 +1,20 @@
+name: ship-prod
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "❌ Fehler: VERCEL_DEPLOY_HOOK Secret fehlt."
+            exit 1
+          fi
+          echo "▶ Sende Deploy-Hook an Vercel…"
+          curl -fsS -X POST "$HOOK"
+          echo "✅ Deploy ausgelöst."
