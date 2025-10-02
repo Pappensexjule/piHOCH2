@@ -1,0 +1,31 @@
+Dieser PR richtet die Projektstruktur korrekt ein und aktiviert die Automationen:
+
+✅ Next.js pages-Router:
+- /pages/_app.tsx
+- /pages/_document.tsx
+- /pages/index.tsx
+- /pages/api/checkout_sessions.ts
+- /styles/globals.css
+
+✅ Control-Bots (GitHub Actions):
+- /.github/workflows/lighthouse-mobile.yml
+- /.github/workflows/uptime.yml
+- /.github/workflows/playwright.yml
+
+✅ Stripe Checkout:
+- API-Route + React-Button (bereit)
+- .env.local.example vorhanden
+
+✅ Sonstiges:
+- /tests/mobile.spec.ts (iPhone-Smoke)
+
+Nach Merge:
+- Actions laufen automatisch (Lighthouse mobil, Uptime/Redirects, Playwright iPhone)
+- Vercel deployt automatisch, wenn Repo verbunden
+
+ToDo nach Merge (einmalig):
+- In Vercel Env setzen:
+  STRIPE_SECRET_KEY=sk_live_***
+  STRIPE_PUBLISHABLE_KEY=pk_live_***
+  ALLOWED_ORIGINS=https://pihoch2.me,https://www.pihoch2.me
+- Stripe: Live-Mode + Allowed Domains
