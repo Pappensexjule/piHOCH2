@@ -1,14 +1,13 @@
 // pages/api/setup/github-secret.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import sodium from "libsodium-wrappers";
+import { sealedbox } from "tweetnacl-sealedbox-js";
 
-// GitHub verlangt: Wert mit Repo-PublicKey verschlüsseln (Libsodium "sealed box")
-async function seal(publicKeyBase64: string, secretValue: string) {
-  await sodium.ready;
-  const pk = sodium.from_base64(publicKeyBase64, sodium.base64_variants.ORIGINAL);
-  const msg = sodium.from_string(secretValue);
-  const enc = sodium.crypto_box_seal(msg, pk);
-  return sodium.to_base64(enc, sodium.base64_variants.ORIGINAL);
+function b64ToUint8(b64: string) {
+  if (typeof Buffer !== "undefined") return new Uint8Array(Buffer.from(b64, "base64"));
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -27,8 +26,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!pkResp.ok) throw new Error("get public key failed");
     const { key_id, key } = await pkResp.json();
 
-    // 2) Secret versiegeln
-    const encrypted_value = await seal(key, value);
+    // 2) Secret versiegeln (sealed box)
+    const pk = b64ToUint8(key);
+    const enc = sealedbox.seal(
+      typeof Buffer !== "undefined" ? Buffer.from(value) : new TextEncoder().encode(value),
+      pk
+    );
+    const encrypted_value =
+      typeof Buffer !== "undefined"
+        ? Buffer.from(enc).toString("base64")
+        : btoa(String.fromCharCode(...enc));
 
     // 3) Secret setzen/überschreiben
     const put = await fetch(
