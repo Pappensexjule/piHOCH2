@@ -1,4 +1,8 @@
 {
+  "version": 2,
+  "routes": [{ "src": "/(.*)", "dest": "/index.html" }]
+}
+{
   "redirects": [
     { "source": "/www/:path*", "destination": "/:path*", "permanent": true }
   ],
