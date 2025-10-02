@@ -1,0 +1,154 @@
+name: CHIBot Emergency Ship
+on:
+  push:
+    paths:
+      - ".github/workflows/chibot-emergency-ship.yml"   # läuft automatisch beim Hinzufügen dieser Datei
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  fix_and_ship:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Git user
+        run: |
+          git config user.name "CHIBot"
+          git config user.email "actions@github.com"
+
+      - name: Ensure Next.js structure + FINCHI page + APIs
+        run: |
+          mkdir -p pages/api pages styles public/icons
+          # Minimal startseite (falls leer)
+          cat > pages/index.tsx <<'EOF'
+          export default function Home(){
+            return (<main style={{padding:24,fontFamily:"system-ui"}}>
+              <h1>pihoch2.me — online</h1>
+              <p>Öffne <a href="/finchi">/finchi</a> für die Godmode-Konsole.</p>
+            </main>);
+          }
+          EOF
+
+          # FINCHI Konsole (vereinfachte, robuste Version)
+          cat > pages/finchi.tsx <<'EOF'
+          import React,{useState}from'react'
+          export default function Finchi(){
+            const[log,setLog]=useState<string[]>([]),[busy,setBusy]=useState<string|null>(null);
+            const add=(m:string)=>setLog(v=>[new Date().toLocaleTimeString()+" "+m,...v].slice(0,200));
+            async function call(path:string,okMsg:string){const r=await fetch(path,{method:'POST'});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Request failed');add(okMsg);return j;}
+            async function run(name:string,fn:()=>Promise<void>|void){if(busy)return;setBusy(name);add("▶ "+name+"…");try{await fn();add("✅ "+name+" done.")}catch(e:any){add("❌ "+name+": "+(e?.message||e))}finally{setBusy(null)}}
+            return(<main style={{minHeight:'100vh',background:'#0b0b10',color:'#eaeaf2',padding:16,fontFamily:'system-ui'}}>
+              <h1 style={{margin:0}}>FINCHI Godmode (Φ)</h1>
+              <div style={{opacity:.7,marginBottom:16}}>Kollektiv: Online · Guardrails aktiv</div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12}}>
+                <Btn label="Deploy Now" onClick={()=>run('Deploy Now',async()=>{await call('/api/deploy','Vercel Deploy Hook ausgelöst')})}/>
+                <Btn label="Stripe Test" onClick={()=>run('Stripe Test',async()=>{const j=await call('/api/stripe-test','Stripe Session erstellt'); if(j.url) window.location.href=j.url;})}/>
+                <Btn label="Lighthouse" onClick={()=>run('Lighthouse',async()=>{await call('/api/audit','Workflow dispatched')})}/>
+                <Btn label="iPhone UI" onClick={()=>run('iPhone UI',async()=>{await call('/api/iphone','Workflow dispatched')})}/>
+                <Btn label="Rotate Keys" onClick={()=>run('Rotate Keys',async()=>{await call('/api/rotate','Workflow dispatched')})}/>
+                <Btn label="Bots Training" onClick={()=>run('Bots Training',async()=>{await call('/api/train','Workflow dispatched')})}/>
+                <Btn label="Cash Report" onClick={()=>run('Cash Report',async()=>{await call('/api/cash','Workflow dispatched')})}/>
+              </div>
+              <h3 style={{marginTop:24}}>Logs</h3>
+              <div style={{fontFamily:'ui-monospace,Menlo,Consolas,monospace',fontSize:12,background:'#11121a',border:'1px solid #2a2b37',borderRadius:12,padding:12,maxHeight:320,overflow:'auto'}}>
+                {log.length===0?<div style={{opacity:.6}}>Bereit. Wähle eine Aktion.</div>:log.map((l,i)=><div key={i}>{l}</div>)}
+              </div>
+            </main>)}
+          function Btn({label,onClick}:{label:string;onClick:()=>void}){return <button onClick={onClick} style={{padding:'12px 14px',borderRadius:12,border:'1px solid #333',background:'#F2C94C',color:'#111',textAlign:'left',fontWeight:600}}>{label}</button>}
+          EOF
+
+          # Minimal-APIs: Deploy + Stripe + Dispatches
+          cat > pages/api/deploy.ts <<'EOF'
+          import type { NextApiRequest, NextApiResponse } from 'next'
+          export default async function h(req:NextApiRequest,res:NextApiResponse){
+            if(req.method!=='POST') return res.status(405).json({error:'POST only'})
+            try{
+              const hook=process.env.VERCEL_DEPLOY_HOOK; if(!hook) throw new Error('VERCEL_DEPLOY_HOOK not set')
+              const r=await fetch(hook,{method:'POST'}); if(!r.ok) throw new Error('Deploy hook failed')
+              res.status(200).json({ok:true})
+            }catch(e:any){ res.status(500).json({error:e.message||'deploy failed'}) }
+          }
+          EOF
+
+          cat > pages/api/stripe-test.ts <<'EOF'
+          import type { NextApiRequest, NextApiResponse } from 'next'
+          import Stripe from 'stripe'
+          const stripe=new Stripe(process.env.STRIPE_SECRET_KEY as string,{apiVersion:'2024-09-30.acacia'})
+          export default async function h(req:NextApiRequest,res:NextApiResponse){
+            if(req.method!=='POST') return res.status(405).json({error:'POST only'})
+            try{
+              const origin=(req.headers.origin as string)||'http://localhost:3000'
+              const session=await stripe.checkout.sessions.create({
+                mode:'payment',
+                line_items:[{price_data:{currency:'eur',product_data:{name:'Test'},unit_amount:3900},quantity:1}],
+                success_url:`${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url:`${origin}/cancelled`
+              })
+              res.status(200).json({url:session.url})
+            }catch(e:any){ res.status(500).json({error:e.message||'stripe failed'}) }
+          }
+          EOF
+
+          for WF in rotate-keys.yml bots-training.yml cash-report.yml lighthouse-dispatch.yml playwright-dispatch.yml; do
+            NAME=$(echo $WF | sed 's/.yml//; s/-dispatch//')
+            API=$(case "$WF" in
+              rotate-keys.yml) echo rotate ;;
+              bots-training.yml) echo train ;;
+              cash-report.yml) echo cash ;;
+              lighthouse-dispatch.yml) echo audit ;;
+              playwright-dispatch.yml) echo iphone ;;
+            esac)
+            cat > pages/api/${API}.ts <<EOF
+          import type { NextApiRequest, NextApiResponse } from 'next'
+          export default async function h(req:NextApiRequest,res:NextApiResponse){
+            if(req.method!=='POST') return res.status(405).json({error:'POST only'})
+            try{
+              const token=process.env.GH_PAT; if(!token) throw new Error('GH_PAT not set')
+              const owner='Pappensexjule', repo='piHOCH2'
+              const r=await fetch(\`https://api.github.com/repos/\${owner}/\${repo}/actions/workflows/${WF}/dispatches\`,{
+                method:'POST', headers:{'Authorization':\`Bearer \${token}\`,'Accept':'application/vnd.github+json'}, body: JSON.stringify({ref:'main'}) })
+              if(!r.ok) throw new Error('Dispatch failed')
+              res.status(200).json({ok:true})
+            }catch(e:any){ res.status(500).json({error:e.message||'dispatch failed'}) }
+          }
+          EOF
+          done
+
+      - name: Ensure package.json (Next/React/Stripe)
+        run: |
+          if [ ! -f package.json ]; then
+            cat > package.json <<'EOF'
+            {"name":"pihoch2","private":true,"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"next":"14.2.5","react":"18.3.1","react-dom":"18.3.1","stripe":"^16.0.0"}}
+            EOF
+          else
+            node -e "let p=require('./package.json');p.dependencies=p.dependencies||{};p.dependencies.next=p.dependencies.next||'14.2.5';p.dependencies.react=p.dependencies.react||'18.3.1';p.dependencies['react-dom']=p.dependencies['react-dom']||'18.3.1';p.dependencies.stripe=p.dependencies.stripe||'^16.0.0';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
+          fi
+
+      - name: Commit & push (to main)
+        run: |
+          git add .
+          git commit -m "chore(chibot): emergency ship /finchi + apis" || echo "no changes"
+          git push origin HEAD:main
+
+      - name: Trigger Vercel Deploy (if secret present)
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$HOOK" ]; then
+            echo "Triggering Vercel…"
+            curl -fsS -X POST "$HOOK" || true
+          else
+            echo "WARN: VERCEL_DEPLOY_HOOK not set — manual redeploy needed."
+          fi
+
+      - name: Post summary
+        run: |
+          echo "## CHIBot Emergency Ship" >> $GITHUB_STEP_SUMMARY
+          echo "- Seiten erzeugt: \`/finchi\`, \`/api/*\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Deploy ausgelöst (falls Hook vorhanden)" >> $GITHUB_STEP_SUMMARY
+          echo "- Besuche: https://pihoch2.me/finchi" >> $GITHUB_STEP_SUMMARY
