@@ -1,0 +1,1 @@
+dispatch lighthouse-dispatch.yml
