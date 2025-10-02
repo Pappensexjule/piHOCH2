@@ -4,7 +4,7 @@ export default async function handler(req, res){
   try {
     const token = process.env.GH_PAT; if (!token) throw new Error("GH_PAT not set");
     const owner = "Pappensexjule", repo = "piHOCH2";
-    const workflow = "###REPLACE###"; // z.B. "lighthouse-dispatch.yml"
+    const workflow = "lighthouse-dispatch.yml"; // z.B. "lighthouse-dispatch.yml"
     const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
