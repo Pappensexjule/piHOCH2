@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FINCHI Godmode (Φ)</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#0b0b10;color:#eaeaf2;margin:0;padding:24px}
+    h1{margin:0 0 8px 0} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    button{padding:12px 14px;border-radius:12px;border:1px solid #333;background:#F2C94C;color:#111;text-align:left;font-weight:600;cursor:pointer}
+    .log{font:12px ui-monospace,Menlo,Consolas;background:#11121a;border:1px solid #2a2b37;border-radius:12px;padding:12px;max-height:320px;overflow:auto}
+    .muted{opacity:.7;margin-bottom:16px}
+  </style>
+</head>
+<body>
+  <h1>FINCHI Godmode (Φ)</h1>
+  <div class="muted">Kollektiv online · Guardrails aktiv</div>
+
+  <div class="grid">
+    <button onclick="call('/api/deploy','Vercel Deploy Hook ausgelöst')">Deploy Now</button>
+    <button onclick="dispatch('/api/audit','Lighthouse workflow dispatched')">Mobile Lighthouse</button>
+    <button onclick="dispatch('/api/iphone','Playwright workflow dispatched')">iPhone UI Test</button>
+    <button onclick="dispatch('/api/rotate','Rotate Keys workflow dispatched')">Rotate Keys</button>
+    <button onclick="dispatch('/api/train','Bots Training workflow dispatched')">Bots Training</button>
+    <button onclick="dispatch('/api/cash','Cash Report workflow dispatched')">Cash Report</button>
+    <button onclick="stripeTest()">Stripe Test</button>
+  </div>
+
+  <h3 style="margin-top:24px">Logs</h3>
+  <div class="log" id="log"><div class="muted">Bereit. Wähle eine Aktion.</div></div>
+
+  <script>
+    const log = (m)=>{ const el=document.getElementById('log'); const t=new Date().toLocaleTimeString(); el.innerHTML=`<div>${t} ${m}</div>`+el.innerHTML }
+    async function call(path, okMsg){
+      try{
+        const r = await fetch(path,{method:'POST'});
+        const j = await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(j.error||'Request failed');
+        log('✅ '+okMsg);
+      }catch(e){ log('❌ '+(e.message||e)); }
+    }
+    async function dispatch(path, msg){ return call(path, msg); }
+    async function stripeTest(){
+      try{
+        const r = await fetch('/api/stripe-test',{method:'POST'});
+        const j = await r.json();
+        if(j.url) { log('✅ Stripe Session erstellt'); location.href = j.url; }
+        else { throw new Error('Stripe Fehler'); }
+      }catch(e){ log('❌ '+(e.message||e)); }
+    }
+  </script>
+</body>
+</html>
